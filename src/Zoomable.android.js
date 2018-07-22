@@ -21,6 +21,7 @@ export default class Zoomable extends PureComponent {
   static propTypes = {
     minimumZoomScale: PropTypes.number,
     maximumZoomScale: PropTypes.number,
+    onZoomScaleChange: PropTypes.func,
   };
 
   static defaultProps = {
@@ -47,10 +48,11 @@ export default class Zoomable extends PureComponent {
     this.size = { width: 0, height: 0 };
 
     this.panResponder = PanResponder.create({
-      onStartShouldSetPanResponder: (event, gestureState) => true,
+      onStartShouldSetPanResponder: (event, gestureState) => this.scale !== 1,
       onMoveShouldSetPanResponder: (event, gestureState) =>
-        gestureState.dx > 2 || gestureState.dy > 2 || gestureState.numberActiveTouches === 2,
-      onMoveShouldSetPanResponderCapture: (event, gestureState) => true,
+        (this.scale !== 1 && (gestureState.dx > 2 || gestureState.dy > 2)) ||
+        gestureState.numberActiveTouches === 2,
+      onMoveShouldSetPanResponderCapture: (event, gestureState) => this.scale !== 1,
       onPanResponderGrant: this.handlePanResponderGrant,
       onPanResponderMove: this.handlePanResponderMove,
       onPanResponderTerminationRequest: (event, gestureState) => false,
@@ -117,6 +119,10 @@ export default class Zoomable extends PureComponent {
     }
     this.scale = scale;
     this.offset = offset;
+
+    if (this.startScale !== scale && this.props.onZoomScaleChange) {
+      this.props.onZoomScaleChange(scale);
+    }
   };
 
   render() {
